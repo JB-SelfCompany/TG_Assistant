@@ -177,39 +177,35 @@ class BotScheduler:
             from services.weather_service import weather_service
             from services.currency_service import currency_service
             
-            # Get current date
             now = datetime.now(ZoneInfo(settings.default_timezone))
             formatted_date = now.strftime("%d.%m.%Y")
             
             # Get weather data
-            weather_data = await weather_service.get_current_weather(
-                settings.default_city
-            )
+            weather_data = await weather_service.get_current_weather(settings.default_city)
             
             # Get currency rates
             currency_rates = await currency_service.get_rates()
             
             # Build message text
-            text = f"🌅 Доброе утро! {formatted_date}\n\n"
+            text = f"🌅 Доброе утро!\n\n"
+            text += f"🌤 Погода на {formatted_date}:\n\n"
             
             # Add weather
             if weather_data:
-                text += "🌤 Погода:\n"
                 text += weather_service.format_current_weather(weather_data)
             else:
-                text += "🌤 Погода: данные недоступны\n"
+                text += "❌ Не удалось получить данные о погоде.\n"
             
-            text += "\n"
+            text += "\n"  # Empty line after weather
             
             # Add currency rates (only major currencies)
             if currency_rates:
-                text += "💱 Курс валют:\n"
-                text += self._format_major_currencies(currency_rates)
+                text += self.format_major_currencies(currency_rates, formatted_date)
             else:
-                text += "💱 Курс валют: данные недоступны\n"
+                text += "❌ Не удалось получить курсы валют.\n"
             
-            # Send message to admin
             try:
+                # Send message to admin
                 sent_message = await self.bot.send_message(
                     chat_id=settings.admin_user_id,
                     text=text
@@ -255,11 +251,13 @@ class BotScheduler:
         except Exception as e:
             logger.error(f"Error in delete_daily_message: {e}")
     
-    def _format_major_currencies(self, rates: dict) -> str:
-        """Format only major currencies (NEW helper method)"""
+    def format_major_currencies(self, rates: Dict[str, Dict], formatted_date: str) -> str:
+        """Format only major currencies for morning message"""
+        text = f"💱 Основные курсы валют на {formatted_date}:\n\n"
+        
         emoji_map = {
             "USD": "💵",
-            "EUR": "💶",
+            "EUR": "💶", 
             "GBP": "💷",
             "JPY": "💴",
             "CHF": "🇨🇭",
@@ -267,14 +265,13 @@ class BotScheduler:
             "UAH": "🇺🇦"
         }
         
-        major_currencies = ["USD", "EUR", "GBP", "JPY", "CHF", "CNY", "UAH"]
-        text = ""
+        priority_currencies = ["USD", "EUR", "GBP", "JPY", "CHF", "CNY", "UAH"]
         
-        for code in major_currencies:
+        for code in priority_currencies:
             if code in rates:
                 rate_data = rates[code]
-                emoji = emoji_map.get(code, "💰")
-                value = rate_data["value"] / rate_data["nominal"]
+                emoji = emoji_map.get(code, "💱")
+                value = rate_data['value'] / rate_data['nominal']
                 text += f"{emoji} {code}: {value:.2f} ₽\n"
         
         return text
