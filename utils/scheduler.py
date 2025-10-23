@@ -4,7 +4,7 @@ import logging
 import asyncio
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
-from typing import Callable
+from typing import Callable, Dict
 from aiogram import Bot
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
