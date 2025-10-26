@@ -253,7 +253,7 @@ class BotScheduler:
     
     def format_major_currencies(self, rates: Dict[str, Dict], formatted_date: str) -> str:
         """Format only major currencies for morning message"""
-        text = f"💱 Основные курсы валют на {formatted_date}:\n\n"
+        text = f"\n💱 Основные курсы валют на {formatted_date}:\n\n"
         
         emoji_map = {
             "USD": "💵",
